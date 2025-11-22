@@ -1,0 +1,57 @@
+{
+  "name": "Attendance",
+  "type": "object",
+  "properties": {
+    "profile_id": {
+      "type": "string",
+      "description": "Reference to enrolled Profile ID"
+    },
+    "profile_name": {
+      "type": "string",
+      "description": "Name of the person for quick reference"
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "Employee ID for quick reference"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When attendance was marked"
+    },
+    "confidence_score": {
+      "type": "number",
+      "description": "Match confidence percentage (0-100)"
+    },
+    "spoof_detected": {
+      "type": "boolean",
+      "description": "Whether spoof attempt was detected"
+    },
+    "spoof_type": {
+      "type": "string",
+      "description": "Type of spoof if detected"
+    },
+    "signature_similarity": {
+      "type": "number",
+      "description": "Depth signature similarity score"
+    },
+    "device_id": {
+      "type": "string",
+      "description": "Device identifier"
+    },
+    "verification_result": {
+      "type": "string",
+      "enum": [
+        "matched",
+        "no_match",
+        "spoof_detected"
+      ],
+      "description": "Overall verification result"
+    }
+  },
+  "required": [
+    "profile_id",
+    "timestamp",
+    "confidence_score"
+  ]
+}
