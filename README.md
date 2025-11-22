@@ -77,11 +77,10 @@ FocusFlow ID eliminates these weak points using physics-based liveness detection
 ---
 
 📦 Repository Structure  
-src/
-components/
-pages/
-styles/
-public/
+Components
+Pages
+Entities
+Layout.js
 README.md
 
 ---
