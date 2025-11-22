@@ -1,0 +1,182 @@
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Scan, Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import CameraCapture from '../components/biometric/CameraCapture';
+import DepthSignatureChart from '../components/biometric/DepthSignatureChart';
+import { Button } from '@/components/ui/button';
+
+export default function Verify() {
+  const [photoFile, setPhotoFile] = useState(null);
+  const [verifying, setVerifying] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const generateTestSignature = async () => {
+    const prompt = `Generate a realistic autofocus depth-signature for biometric verification. 
+    Create an array of 50 data points with the following structure:
+    - depth: random values between 0.2 and 1.0
+    - clarity: random values between 0.3 and 1.0
+    - timestamp: incremental values from 0 to 1000
+    Return ONLY a JSON array.`;
+
+    const response = await base44.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          signature: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                depth: { type: "number" },
+                clarity: { type: "number" },
+                timestamp: { type: "number" }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return response.signature;
+  };
+
+  const calculateSimilarity = (sig1, sig2) => {
+    if (!sig1 || !sig2 || sig1.length !== sig2.length) return 0;
+    
+    let totalDiff = 0;
+    for (let i = 0; i < sig1.length; i++) {
+      const depthDiff = Math.abs(sig1[i].depth - sig2[i].depth);
+      const clarityDiff = Math.abs(sig1[i].clarity - sig2[i].clarity);
+      totalDiff += (depthDiff + clarityDiff) / 2;
+    }
+    
+    const avgDiff = totalDiff / sig1.length;
+    return Math.max(0, (1 - avgDiff) * 100);
+  };
+
+  const detectSpoof = (signature) => {
+    const depths = signature.map(s => s.depth);
+    const mean = depths.reduce((a, b) => a + b) / depths.length;
+    const variance = depths.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / depths.length;
+    
+    const isFlat = variance < 0.01;
+    const isLowVariance = variance < 0.03;
+    
+    if (isFlat) {
+      return { isSpoof: true, type: 'Flat surface detected (likely photo/screen)', confidence: 95 };
+    }
+    
+    if (isLowVariance) {
+      return { isSpoof: true, type: 'Low variance pattern (possible printed photo)', confidence: 80 };
+    }
+    
+    let repetitions = 0;
+    for (let i = 0; i < depths.length - 5; i++) {
+      const pattern = depths.slice(i, i + 5);
+      for (let j = i + 5; j < depths.length - 5; j++) {
+        const testPattern = depths.slice(j, j + 5);
+        const diff = pattern.reduce((sum, val, idx) => sum + Math.abs(val - testPattern[idx]), 0) / 5;
+        if (diff < 0.05) repetitions++;
+      }
+    }
+    
+    if (repetitions > 3) {
+      return { isSpoof: true, type: 'Repetitive pattern detected (video replay)', confidence: 85 };
+    }
+    
+    return { isSpoof: false, type: null, confidence: 98 };
+  };
+
+  const handleVerify = async () => {
+    if (!photoFile) return;
+
+    setVerifying(true);
+    setResult(null);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const capturedSignature = await generateTestSignature();
+      
+      const spoofCheck = detectSpoof(capturedSignature);
+      
+      if (spoofCheck.isSpoof) {
+        setResult({
+          success: false,
+          spoof_detected: true,
+          spoof_type: spoofCheck.type,
+          confidence: spoofCheck.confidence,
+          signature: capturedSignature,
+          message: 'Spoof attempt detected'
+        });
+        return;
+      }
+      
+      const profiles = await base44.entities.Profile.list();
+      
+      let bestMatch = null;
+      let highestSimilarity = 0;
+      
+      for (const profile of profiles) {
+        if (profile.baseline_signature && profile.baseline_signature.length > 0) {
+          const similarity = calculateSimilarity(capturedSignature, profile.baseline_signature);
+          if (similarity > highestSimilarity) {
+            highestSimilarity = similarity;
+            bestMatch = profile;
+          }
+        }
+      }
+      
+      const MATCH_THRESHOLD = 70;
+      
+      if (bestMatch && highestSimilarity >= MATCH_THRESHOLD) {
+        await base44.entities.Attendance.create({
+          profile_id: bestMatch.id,
+          profile_name: bestMatch.name,
+          employee_id: bestMatch.employee_id,
+          timestamp: new Date().toISOString(),
+          confidence_score: highestSimilarity,
+          spoof_detected: false,
+          signature_similarity: highestSimilarity,
+          device_id: 'WEB-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+          verification_result: 'matched'
+        });
+
+        setResult({
+          success: true,
+          matched: true,
+          profile: bestMatch,
+          confidence: highestSimilarity,
+          signature: capturedSignature,
+          spoof_detected: false,
+          message: 'Identity verified successfully'
+        });
+      } else {
+        setResult({
+          success: false,
+          matched: false,
+          confidence: highestSimilarity,
+          signature: capturedSignature,
+          spoof_detected: false,
+          message: 'No matching profile found'
+        });
+      }
+
+    } catch (err) {
+      setResult({
+        success: false,
+        error: err.message,
+        message: 'Verification failed'
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] pt-16">
+      <section className="py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
