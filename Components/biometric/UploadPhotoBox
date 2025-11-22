@@ -1,0 +1,67 @@
+import React, { useState, useRef } from 'react';
+import { Upload, Camera, X, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function UploadPhotoBox({ onPhotoSelected, currentPhoto }) {
+  const [preview, setPreview] = useState(currentPhoto || null);
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreview(e.target.result);
+        onPhotoSelected(file);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    handleFileSelect(file);
+  };
+
+  const handleClear = () => {
+    setPreview(null);
+    onPhotoSelected(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  return (
+    <div className="space-y-4">
+      <label className="text-sm font-medium text-gray-300">Face Photo *</label>
+      <div
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        className={`relative border-2 border-dashed rounded-2xl transition-all ${
+          dragging 
+            ? 'border-cyan-400 bg-cyan-500/10' 
+            : preview 
+            ? 'border-green-500/50 bg-green-500/5'
+            : 'border-cyan-500/30 bg-[#1a1a2e]/30 hover:border-cyan-400/50'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={(e) => handleFileSelect(e.target.files[0])}
+          className="hidden"
+        />
+
+        <AnimatePresence mode="wait">
+          {preview ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="relative"
+            >
+              <img
+                src={preview}
+ 
