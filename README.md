@@ -8,8 +8,7 @@ Photos, videos, screens, masks, or deepfakes cannot mimic this optical behavior,
 
 🔥 Live Demo  
 
-https://v0-focus-flow-id-website-ejoa9emek.vercel.app
-
+https://focusflowidt077.base44.app/Home
 ---
 
  🚀 What It Does  
