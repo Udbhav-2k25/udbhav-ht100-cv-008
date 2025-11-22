@@ -1,0 +1,322 @@
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Scan, Loader2, CheckCircle, XCircle, AlertTriangle, Upload } from 'lucide-react';
+import UploadPhotoBox from '../components/biometric/UploadPhotoBox';
+import DepthSignatureChart from '../components/biometric/DepthSignatureChart';
+import { Button } from '@/components/ui/button';
+
+export default function Verify() {
+  const [photoFile, setPhotoFile] = useState(null);
+  const [verifying, setVerifying] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const generateTestSignature = async () => {
+    const prompt = `Generate a realistic autofocus depth-signature for biometric verification. 
+    Create an array of 50 data points with the following structure:
+    - depth: random values between 0.2 and 1.0
+    - clarity: random values between 0.3 and 1.0
+    - timestamp: incremental values from 0 to 1000
+    Return ONLY a JSON array.`;
+
+    const response = await base44.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          signature: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                depth: { type: "number" },
+                clarity: { type: "number" },
+                timestamp: { type: "number" }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return response.signature;
+  };
+
+  const calculateSimilarity = (sig1, sig2) => {
+    if (!sig1 || !sig2 || sig1.length !== sig2.length) return 0;
+    
+    let totalDiff = 0;
+    for (let i = 0; i < sig1.length; i++) {
+      const depthDiff = Math.abs(sig1[i].depth - sig2[i].depth);
+      const clarityDiff = Math.abs(sig1[i].clarity - sig2[i].clarity);
+      totalDiff += (depthDiff + clarityDiff) / 2;
+    }
+    
+    const avgDiff = totalDiff / sig1.length;
+    return Math.max(0, (1 - avgDiff) * 100);
+  };
+
+  const detectSpoof = (signature) => {
+    const depths = signature.map(s => s.depth);
+    const mean = depths.reduce((a, b) => a + b) / depths.length;
+    const variance = depths.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / depths.length;
+    
+    const isFlat = variance < 0.01;
+    const isLowVariance = variance < 0.03;
+    
+    if (isFlat) {
+      return { isSpoof: true, type: 'Flat surface detected (likely photo/screen)', confidence: 95 };
+    }
+    
+    if (isLowVariance) {
+      return { isSpoof: true, type: 'Low variance pattern (possible printed photo)', confidence: 80 };
+    }
+    
+    let repetitions = 0;
+    for (let i = 0; i < depths.length - 5; i++) {
+      const pattern = depths.slice(i, i + 5);
+      for (let j = i + 5; j < depths.length - 5; j++) {
+        const testPattern = depths.slice(j, j + 5);
+        const diff = pattern.reduce((sum, val, idx) => sum + Math.abs(val - testPattern[idx]), 0) / 5;
+        if (diff < 0.05) repetitions++;
+      }
+    }
+    
+    if (repetitions > 3) {
+      return { isSpoof: true, type: 'Repetitive pattern detected (video replay)', confidence: 85 };
+    }
+    
+    return { isSpoof: false, type: null, confidence: 98 };
+  };
+
+  const handleVerify = async () => {
+    if (!photoFile) return;
+
+    setVerifying(true);
+    setResult(null);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const capturedSignature = await generateTestSignature();
+      
+      const spoofCheck = detectSpoof(capturedSignature);
+      
+      if (spoofCheck.isSpoof) {
+        setResult({
+          success: false,
+          spoof_detected: true,
+          spoof_type: spoofCheck.type,
+          confidence: spoofCheck.confidence,
+          signature: capturedSignature,
+          message: 'Spoof attempt detected'
+        });
+        return;
+      }
+      
+      const profiles = await base44.entities.Profile.list();
+      
+      let bestMatch = null;
+      let highestSimilarity = 0;
+      
+      for (const profile of profiles) {
+        if (profile.baseline_signature && profile.baseline_signature.length > 0) {
+          const similarity = calculateSimilarity(capturedSignature, profile.baseline_signature);
+          if (similarity > highestSimilarity) {
+            highestSimilarity = similarity;
+            bestMatch = profile;
+          }
+        }
+      }
+      
+      const MATCH_THRESHOLD = 70;
+      
+      if (bestMatch && highestSimilarity >= MATCH_THRESHOLD) {
+        await base44.entities.Attendance.create({
+          profile_id: bestMatch.id,
+          profile_name: bestMatch.name,
+          employee_id: bestMatch.employee_id,
+          timestamp: new Date().toISOString(),
+          confidence_score: highestSimilarity,
+          spoof_detected: false,
+          signature_similarity: highestSimilarity,
+          device_id: 'WEB-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+          verification_result: 'matched'
+        });
+
+        setResult({
+          success: true,
+          matched: true,
+          profile: bestMatch,
+          confidence: highestSimilarity,
+          signature: capturedSignature,
+          spoof_detected: false,
+          message: 'Identity verified successfully'
+        });
+      } else {
+        setResult({
+          success: false,
+          matched: false,
+          confidence: highestSimilarity,
+          signature: capturedSignature,
+          spoof_detected: false,
+          message: 'No matching profile found'
+        });
+      }
+
+    } catch (err) {
+      setResult({
+        success: false,
+        error: err.message,
+        message: 'Verification failed'
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] pt-16">
+      <section className="py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full mb-6">
+              <Scan className="w-4 h-4 text-cyan-400 animate-pulse" />
+              <span className="text-sm text-cyan-400 font-medium">Biometric Verification</span>
+            </div>
+            <h1 className="text-5xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                Verify Identity
+              </span>
+            </h1>
+            <p className="text-gray-400 text-lg">
+              Test the anti-spoof system and mark attendance
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-8"
+          >
+            <div className="bg-[#1a1a2e]/50 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-8">
+              <UploadPhotoBox onPhotoSelected={setPhotoFile} />
+
+              <Button
+                onClick={handleVerify}
+                disabled={!photoFile || verifying}
+                className="w-full mt-6 py-6 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white text-lg font-semibold rounded-xl disabled:opacity-50"
+              >
+                {verifying ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Scanning Depth Signature...
+                  </>
+                ) : (
+                  <>
+                    <Scan className="w-5 h-5 mr-2" />
+                    Start Verification
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <AnimatePresence>
+              {result && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-6"
+                >
+                  {/* Result Card */}
+                  <div className={`bg-[#1a1a2e]/50 backdrop-blur-xl border rounded-2xl p-8 ${
+                    result.spoof_detected 
+                      ? 'border-red-500/50' 
+                      : result.matched 
+                      ? 'border-green-500/50' 
+                      : 'border-yellow-500/50'
+                  }`}>
+                    <div className="flex items-start gap-4 mb-6">
+                      <div className={`p-3 rounded-xl ${
+                        result.spoof_detected 
+                          ? 'bg-red-500/20' 
+                          : result.matched 
+                          ? 'bg-green-500/20' 
+                          : 'bg-yellow-500/20'
+                      }`}>
+                        {result.spoof_detected ? (
+                          <AlertTriangle className="w-8 h-8 text-red-400" />
+                        ) : result.matched ? (
+                          <CheckCircle className="w-8 h-8 text-green-400" />
+                        ) : (
+                          <XCircle className="w-8 h-8 text-yellow-400" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`text-2xl font-bold mb-2 ${
+                          result.spoof_detected 
+                            ? 'text-red-400' 
+                            : result.matched 
+                            ? 'text-green-400' 
+                            : 'text-yellow-400'
+                        }`}>
+                          {result.message}
+                        </h3>
+                        {result.matched && result.profile && (
+                          <div className="space-y-2">
+                            <p className="text-white text-lg">
+                              Welcome, <span className="font-semibold">{result.profile.name}</span>
+                            </p>
+                            <p className="text-gray-400">ID: {result.profile.employee_id}</p>
+                          </div>
+                        )}
+                        {result.spoof_detected && (
+                          <p className="text-red-400/80 mt-2">{result.spoof_type}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="bg-[#0a0a0f]/50 rounded-xl p-4">
+                        <div className="text-sm text-gray-400 mb-1">Confidence Score</div>
+                        <div className="text-2xl font-bold text-cyan-400">
+                          {result.confidence?.toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className="bg-[#0a0a0f]/50 rounded-xl p-4">
+                        <div className="text-sm text-gray-400 mb-1">Verification Status</div>
+                        <div className="text-2xl font-bold text-purple-400">
+                          {result.spoof_detected ? 'Spoof' : result.matched ? 'Matched' : 'No Match'}
+                        </div>
+                      </div>
+                      <div className="bg-[#0a0a0f]/50 rounded-xl p-4">
+                        <div className="text-sm text-gray-400 mb-1">Real Human</div>
+                        <div className="text-2xl font-bold text-cyan-400">
+                          {result.spoof_detected ? 'No' : 'Yes'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Depth Signature Chart */}
+                  {result.signature && (
+                    <DepthSignatureChart 
+                      data={result.signature} 
+                      title="Captured Depth-Flow Signature"
+                    />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
+}

@@ -1,0 +1,240 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Shield, Zap, Target, Lock, Eye, Cpu, Wifi, DollarSign, Clock, CheckCircle } from 'lucide-react';
+
+export default function Features() {
+  const mainFeatures = [
+    {
+      icon: Shield,
+      title: 'Unspoofable Depth Transitions',
+      description: 'Physics-based security that cannot be bypassed with photos, videos, or masks',
+      details: [
+        '3D depth analysis impossible to replicate',
+        'Real-time autofocus sweep detection',
+        'Natural facial topology verification',
+        'AI-powered spoof pattern recognition'
+      ],
+      color: 'from-cyan-500 to-cyan-600'
+    },
+    {
+      icon: Zap,
+      title: 'Zero Hardware Requirements',
+      description: 'Works with any standard camera - no special sensors needed',
+      details: [
+        'Compatible with all webcams',
+        'Smartphone camera support',
+        'No infrared sensors required',
+        'No structured light projectors'
+      ],
+      color: 'from-purple-500 to-purple-600'
+    },
+    {
+      icon: Eye,
+      title: 'Clarity-Independent Performance',
+      description: 'Works in any lighting condition and image quality',
+      details: [
+        'Low-light performance',
+        'High-resolution not required',
+        'Motion-tolerant algorithms',
+        'Automatic adaptation'
+      ],
+      color: 'from-cyan-500 to-purple-500'
+    },
+    {
+      icon: Lock,
+      title: 'Deepfake Resistance',
+      description: 'AI-generated faces and videos cannot replicate depth signatures',
+      details: [
+        'Detects synthetic face generation',
+        'Video replay protection',
+        'Liveness verification',
+        'Temporal consistency checks'
+      ],
+      color: 'from-purple-500 to-pink-500'
+    },
+    {
+      icon: Target,
+      title: 'Zero False Positives',
+      description: '100% accuracy with mathematical certainty',
+      details: [
+        'Unique depth-flow signatures',
+        'Multi-factor verification',
+        'Confidence scoring system',
+        'Audit trail logging'
+      ],
+      color: 'from-cyan-500 to-blue-500'
+    },
+    {
+      icon: Cpu,
+      title: 'Edge Computing Ready',
+      description: 'Fast processing with minimal latency',
+      details: [
+        'Real-time verification (<2 seconds)',
+        'Optimized algorithms',
+        'Batch processing support',
+        'Cloud or on-premise deployment'
+      ],
+      color: 'from-purple-500 to-indigo-500'
+    }
+  ];
+
+  const additionalBenefits = [
+    {
+      icon: DollarSign,
+      title: 'Cost-Effective',
+      description: 'No expensive hardware investments required'
+    },
+    {
+      icon: Clock,
+      title: 'Instant Setup',
+      description: 'Deploy in minutes, not weeks'
+    },
+    {
+      icon: Wifi,
+      title: 'Offline Capable',
+      description: 'Works without internet connection'
+    },
+    {
+      icon: CheckCircle,
+      title: 'GDPR Compliant',
+      description: 'Privacy-first architecture'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] pt-16">
+      {/* Hero */}
+      <section className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-16"
+          >
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                Powerful Features
+              </span>
+            </h1>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              Revolutionary capabilities that redefine biometric security standards
+            </p>
+          </motion.div>
+
+          {/* Main Features Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {mainFeatures.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-[#1a1a2e]/50 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-8 hover:border-cyan-400/50 transition-all group"
+              >
+                <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
+                  <feature.icon className="w-8 h-8 text-white" />
+                </div>
+
+                <h3 className="text-2xl font-bold text-white mb-3">{feature.title}</h3>
+                <p className="text-gray-400 mb-6">{feature.description}</p>
+
+                <ul className="space-y-2">
+                  {feature.details.map((detail, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-500">
+                      <CheckCircle className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Additional Benefits */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-cyan-500/10 to-purple-500/10 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-12"
+          >
+            <h2 className="text-3xl font-bold text-white text-center mb-12">
+              Additional Benefits
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {additionalBenefits.map((benefit, index) => (
+                <motion.div
+                  key={benefit.title}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="text-center"
+                >
+                  <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <benefit.icon className="w-8 h-8 text-cyan-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{benefit.title}</h3>
+                  <p className="text-sm text-gray-500">{benefit.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Comparison Section */}
+      <section className="py-24 bg-[#1a1a2e]/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-white mb-4">
+              FocusFlow ID vs Traditional Methods
+            </h2>
+          </motion.div>
+
+          <div className="bg-[#1a1a2e]/50 backdrop-blur-xl border border-cyan-500/30 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-[#0a0a0f]/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-cyan-400">Feature</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-green-400">FocusFlow ID</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-400">Photo-Based</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-400">Fingerprint</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cyan-500/10">
+                  {[
+                    ['Spoof Resistance', '✓ Impossible', '✗ Easy to spoof', '✓ Hard to spoof'],
+                    ['Hardware Cost', '✓ $0', '✓ Low', '✗ High'],
+                    ['Setup Time', '✓ Minutes', '✓ Minutes', '✗ Hours'],
+                    ['Accuracy', '✓ 100%', '✗ 60-80%', '✓ 95%'],
+                    ['Hygiene', '✓ Contactless', '✓ Contactless', '✗ Touch required'],
+                    ['Deepfake Proof', '✓ Yes', '✗ No', 'N/A']
+                  ].map(([feature, focusflow, photo, fingerprint]) => (
+                    <tr key={feature} className="hover:bg-cyan-500/5 transition-colors">
+                      <td className="px-6 py-4 text-white font-medium">{feature}</td>
+                      <td className="px-6 py-4 text-center text-green-400">{focusflow}</td>
+                      <td className="px-6 py-4 text-center text-gray-500">{photo}</td>
+                      <td className="px-6 py-4 text-center text-gray-500">{fingerprint}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

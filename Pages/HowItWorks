@@ -1,0 +1,183 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Camera, Scan, Brain, CheckCircle, Focus, Activity, Shield } from 'lucide-react';
+
+export default function HowItWorks() {
+  const steps = [
+    {
+      icon: Camera,
+      title: 'Capture Face Image',
+      description: 'Standard camera captures your face during enrollment or verification',
+      details: 'No special hardware needed. Any webcam or phone camera works perfectly.',
+      color: 'cyan'
+    },
+    {
+      icon: Focus,
+      title: 'Autofocus Sweep',
+      description: 'System simulates rapid autofocus transitions across depth planes',
+      details: 'Mimics natural camera behavior to extract unique depth-flow patterns.',
+      color: 'purple'
+    },
+    {
+      icon: Activity,
+      title: 'Depth Signature Generation',
+      description: 'Creates a unique signature from focus-clarity transitions',
+      details: 'Each person has a distinct depth profile that cannot be replicated by photos or videos.',
+      color: 'cyan'
+    },
+    {
+      icon: Brain,
+      title: 'Spoof Detection',
+      description: 'AI analyzes variance, jitter, and pattern authenticity',
+      details: 'Flat responses from photos/screens are instantly detected and rejected.',
+      color: 'purple'
+    },
+    {
+      icon: Scan,
+      title: 'Signature Matching',
+      description: 'Compares captured signature with stored baseline',
+      details: 'Advanced similarity algorithms ensure accurate identification.',
+      color: 'cyan'
+    },
+    {
+      icon: CheckCircle,
+      title: 'Identity Verified',
+      description: 'Attendance marked with confidence score and timestamp',
+      details: 'Complete audit trail with spoof attempt logging for security.',
+      color: 'purple'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] pt-16">
+      {/* Hero */}
+      <section className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full mb-6">
+              <Shield className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm text-cyan-400 font-medium">Technology Explained</span>
+            </div>
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                How It Works
+              </span>
+            </h1>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              Understanding the science behind autofocus depth-signature technology 
+              and why it's impossible to spoof
+            </p>
+          </motion.div>
+
+          {/* Process Steps */}
+          <div className="max-w-4xl mx-auto space-y-8">
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="relative"
+              >
+                <div className="bg-[#1a1a2e]/50 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-8 hover:border-cyan-400/50 transition-all">
+                  <div className="flex items-start gap-6">
+                    <div className="flex-shrink-0">
+                      <div className={`relative w-16 h-16 bg-${step.color}-500/10 rounded-xl flex items-center justify-center`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br from-${step.color}-500/20 to-transparent rounded-xl`}></div>
+                        <step.icon className={`relative w-8 h-8 text-${step.color}-400`} />
+                      </div>
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {index + 1}
+                        </div>
+                        <h3 className="text-2xl font-bold text-white">{step.title}</h3>
+                      </div>
+                      <p className="text-lg text-gray-300 mb-3">{step.description}</p>
+                      <p className="text-sm text-gray-500">{step.details}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {index < steps.length - 1 && (
+                  <div className="flex justify-center py-4">
+                    <div className="w-0.5 h-8 bg-gradient-to-b from-cyan-500 to-purple-500"></div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why Unspoofable */}
+      <section className="py-24 bg-gradient-to-b from-transparent to-[#1a1a2e]/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Why It's Impossible to Spoof
+            </h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Understanding the physics that makes FocusFlow ID unbreakable
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {[
+              {
+                title: 'Real Faces Have Depth',
+                description: 'Human faces are three-dimensional. As a camera autofocuses, different facial planes (nose, eyes, cheeks) come into focus at different depths, creating a unique pattern.',
+                icon: '🎭'
+              },
+              {
+                title: 'Photos Are Flat',
+                description: 'A printed photo or screen image is completely flat. During autofocus sweep, the entire surface reaches peak clarity simultaneously - an impossible pattern for real faces.',
+                icon: '📸'
+              },
+              {
+                title: 'Variance Detection',
+                description: 'Real faces show high variance in focus transitions. Spoofs show unnaturally low variance and repetitive patterns that our AI instantly flags.',
+                icon: '📊'
+              },
+              {
+                title: 'Jitter Analysis',
+                description: 'Authentic depth signatures contain natural micro-jitter from slight movements. Printed photos and videos show artificial smoothness.',
+                icon: '🌊'
+              }
+            ].map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-[#1a1a2e]/50 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-8"
+              >
+                <div className="text-5xl mb-4">{item.icon}</div>
+                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                <p className="text-gray-400">{item.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
