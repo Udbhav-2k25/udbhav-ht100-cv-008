@@ -8,8 +8,7 @@ Photos, videos, screens, masks, or deepfakes cannot mimic this optical behavior,
 
 🔥 Live Demo  
 
-https://focusflowidt077.base44.app/Home
----
+https://v0-focus-flow-id-website-ejoa9emek.vercel.app/#features---
 
  🚀 What It Does  
 - Captures the camera's autofocus sweep to extract a unique depth-based signature.  
