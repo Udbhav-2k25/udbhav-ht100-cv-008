@@ -49,9 +49,16 @@ https://v0-focus-flow-id-website-ejoa9emek.vercel.app/#features---
 ---
 
  🛠 Tech Stack  
-- *React* (Frontend)  
-- *Base44* (AI-assisted UI generation)  
-- *ChatGPT* (AI-assisted development, explanations, and code refinement)  
+- React (Frontend)
+- Next.js 14
+- Type script
+- Tailwind CSS
+- Shadcn UI
+- Framer motion
+- Deployed in Vercel
+- Lucid icons for custom cursor
+- Performant node package manager
+- ChatGPT
 
 ---
 
