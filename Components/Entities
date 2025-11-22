@@ -1,0 +1,63 @@
+{
+  "name": "Profile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full name of the enrolled user"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email address"
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "Unique employee/student ID"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department or division"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Contact phone number"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "URL to uploaded face photo"
+    },
+    "baseline_signature": {
+      "type": "array",
+      "description": "Depth-flow signature data points",
+      "items": {
+        "type": "object",
+        "properties": {
+          "depth": {
+            "type": "number"
+          },
+          "clarity": {
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "signature_id": {
+      "type": "string",
+      "description": "Unique identifier for the depth signature"
+    },
+    "custom_fields": {
+      "type": "object",
+      "description": "Additional custom fields",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "name",
+    "email",
+    "employee_id"
+  ]
+}
